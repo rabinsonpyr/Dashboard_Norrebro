@@ -38,7 +38,7 @@ def check_password() -> bool:
     if st.session_state.get("authenticated"):
         return True
 
-    st.title("🔒 Sales Dashboard (Tandoori Masala, Nørrebro")
+    st.title("🔒 Sales Dashboard (Tandoori Masala, Nørrebro)")
     pwd = st.text_input("Password", type="password")
     if st.button("Enter"):
         if pwd == config.APP_PASSWORD:
@@ -106,7 +106,7 @@ def load_data() -> pd.DataFrame:
 
 df = load_data()
 
-st.title("📊 Sales Dashboard")
+st.title("📊 Sales Dashboard (Tandoori Masala, Nørrebro)")
 
 col_title, col_refresh = st.columns([5, 1])
 with col_refresh:
