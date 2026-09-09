@@ -257,8 +257,7 @@ fig1.add_trace(go.Scatter(
     x=daily_channel[config.COL_DATE],
     y=daily_channel["Computed Total"],
     mode="lines",
-    line=dict(width=0),
-    opacity=0,
+    line=dict(width=0, color="black"),
     showlegend=False,
     hovertemplate=f"💰 <b>Total Sales</b>: %{{y:,.0f}} {config.CURRENCY}<extra></extra>",
 ))
