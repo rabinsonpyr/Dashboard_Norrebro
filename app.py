@@ -325,7 +325,7 @@ st.subheader("Total Sales per Day")
 fig4 = px.bar(
     melted, x=config.COL_DATE, y="Revenue", color="Channel",
     color_discrete_map=CHANNEL_COLORS,
-    labels={config.COL_DATE: "Date", "Revenue": f"Revenue ({config.CURRENCY})"},
+    labels={config.COL_DATE: "Date", "Day", "Revenue": f"Revenue ({config.CURRENCY})"},
     barmode="stack",
 )
 fig4.update_xaxes(tickformat="%Y-%m-%d", dtick="D1", hoverformat="%Y-%m-%d (%A)")
