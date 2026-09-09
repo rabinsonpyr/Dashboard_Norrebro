@@ -38,7 +38,7 @@ def check_password() -> bool:
     if st.session_state.get("authenticated"):
         return True
 
-    st.title("🔒 Sales Dashboard (Tandoori Masala, Nørrebro)")
+    st.title("🔒 Sales Dashboard")
     pwd = st.text_input("Password", type="password")
     if st.button("Enter"):
         if pwd == config.APP_PASSWORD:
@@ -106,7 +106,7 @@ def load_data() -> pd.DataFrame:
 
 df = load_data()
 
-st.title("📊 Sales Dashboard (Tandoori Masala, Nørrebro)")
+st.title("📊 Sales Dashboard")
 
 col_title, col_refresh = st.columns([5, 1])
 with col_refresh:
@@ -232,6 +232,9 @@ daily_channel = (
     .sum()
     .reset_index()
 )
+daily_channel["Computed Total"] = (
+    daily_channel[config.COL_SALES] + daily_channel[config.COL_WOLT] + daily_channel[config.COL_UBEREATS]
+)
 melted = daily_channel.melt(
     id_vars=[config.COL_DATE],
     value_vars=[config.COL_SALES, config.COL_WOLT, config.COL_UBEREATS],
@@ -249,6 +252,16 @@ fig1.update_traces(
     marker=dict(size=6),
     hovertemplate=f"%{{fullData.name}}: %{{y:,.0f}} {config.CURRENCY}<extra></extra>",
 )
+# Hidden trace purely so "Total" shows up in the combined hover tooltip
+fig1.add_trace(go.Scatter(
+    x=daily_channel[config.COL_DATE],
+    y=daily_channel["Computed Total"],
+    mode="lines",
+    line=dict(width=0),
+    opacity=0,
+    showlegend=False,
+    hovertemplate=f"Total: %{{y:,.0f}} {config.CURRENCY}<extra></extra>",
+))
 fig1.update_layout(hovermode="x unified")
 st.plotly_chart(fig1, use_container_width=True)
 
@@ -308,10 +321,6 @@ with col_c:
     st.plotly_chart(fig5, use_container_width=True)
 
 st.subheader("Total Sales per Day")
-
-daily_channel["Computed Total"] = (
-    daily_channel[config.COL_SALES] + daily_channel[config.COL_WOLT] + daily_channel[config.COL_UBEREATS]
-)
 
 fig4 = px.bar(
     melted, x=config.COL_DATE, y="Revenue", color="Channel",
