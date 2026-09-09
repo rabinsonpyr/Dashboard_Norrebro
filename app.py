@@ -7,7 +7,7 @@ import streamlit as st
 
 # Must be the very first Streamlit command — before importing anything
 # (like config.py) that itself touches st.secrets or other Streamlit APIs.
-st.set_page_config(page_title="Sales Dashboard", layout="wide")
+st.set_page_config(page_title="Sales Dashboard (Tandoori Masala, Nørrebro)", layout="wide")
 
 import io
 import datetime
@@ -106,7 +106,7 @@ def load_data() -> pd.DataFrame:
 
 df = load_data()
 
-st.title("📊 Sales Dashboard")
+st.title("📊 Sales Dashboard (Tandoori Masala, Nørrebro")
 
 col_title, col_refresh = st.columns([5, 1])
 with col_refresh:
@@ -260,7 +260,7 @@ fig1.add_trace(go.Scatter(
     line=dict(width=0),
     opacity=0,
     showlegend=False,
-    hovertemplate=f"Total: %{{y:,.0f}} {config.CURRENCY}<extra></extra>",
+    hovertemplate=f"💰 <b>Total Sales</b>: %{{y:,.0f}} {config.CURRENCY}<extra></extra>",
 ))
 fig1.update_layout(hovermode="x unified")
 st.plotly_chart(fig1, use_container_width=True)
