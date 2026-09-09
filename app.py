@@ -236,7 +236,7 @@ daily_channel["Computed Total"] = (
     daily_channel[config.COL_SALES] + daily_channel[config.COL_WOLT] + daily_channel[config.COL_UBEREATS]
 )
 melted = daily_channel.melt(
-    id_vars=[config.COL_DATE, "Computed Total"],
+    id_vars=[config.COL_DATE],
     value_vars=[config.COL_SALES, config.COL_WOLT, config.COL_UBEREATS],
     var_name="Channel", value_name="Revenue",
 )
@@ -245,7 +245,6 @@ fig1 = px.area(
     melted, x=config.COL_DATE, y="Revenue", color="Channel",
     color_discrete_map=CHANNEL_COLORS,
     labels={config.COL_DATE: "Date", "Revenue": f"Revenue ({config.CURRENCY})"},
-    custom_data=["Computed Total"],
 )
 fig1.update_xaxes(tickformat="%Y-%m-%d<br>(%a)", dtick="D1", hoverformat="%Y-%m-%d (%A)")
 fig1.update_traces(
@@ -253,15 +252,16 @@ fig1.update_traces(
     marker=dict(size=6),
     hovertemplate=f"%{{fullData.name}}: %{{y:,.0f}} {config.CURRENCY}<extra></extra>",
 )
-# Attach the Total as an extra line on the last trace's own tooltip box,
-# so it lines up perfectly instead of being a separately-aligned trace.
-fig1.update_traces(
-    selector=dict(name=config.COL_UBEREATS),
-    hovertemplate=(
-        f"%{{fullData.name}}: %{{y:,.0f}} {config.CURRENCY}"
-        f"<br>💰 <b>Total Sales</b>: %{{customdata[0]:,.0f}} {config.CURRENCY}<extra></extra>"
-    ),
-)
+# Hidden trace purely so "Total" shows up in the combined hover tooltip
+fig1.add_trace(go.Scatter(
+    x=daily_channel[config.COL_DATE],
+    y=daily_channel["Computed Total"],
+    mode="lines",
+    line=dict(width=0),
+    opacity=0,
+    showlegend=False,
+    hovertemplate=f"💰 <b>Total Sales</b>: %{{y:,.0f}} {config.CURRENCY}<extra></extra>",
+))
 fig1.update_layout(hovermode="x unified")
 st.plotly_chart(fig1, use_container_width=True)
 
