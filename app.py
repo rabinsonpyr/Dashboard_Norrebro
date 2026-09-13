@@ -126,6 +126,30 @@ def load_data() -> pd.DataFrame:
     return df
 
 
+WH_COLS = ["Date", "Day", "Person", "Start Time", "End Time", "Hours Worked"]
+
+
+@st.cache_data(ttl=config.REFRESH_SECONDS, show_spinner=False)
+def load_working_hours() -> pd.DataFrame:
+    sheets = fetch_all_sheets()
+    wh = sheets.get(config.WORKING_HOURS_SHEET)
+    if wh is None or wh.empty:
+        return pd.DataFrame(columns=WH_COLS)
+    return wh
+
+
+def get_all_known_people(sales_df: pd.DataFrame) -> list:
+    """Names from both the sales sheet and the working hours sheet, so a
+    name typed into either form shows up as a suggestion everywhere."""
+    names = set()
+    if not sales_df.empty:
+        names.update(sales_df[config.COL_PERSON].dropna().unique().tolist())
+    wh_df = load_working_hours()
+    if not wh_df.empty:
+        names.update(wh_df["Person"].dropna().unique().tolist())
+    return sorted(names)
+
+
 df = load_data()
 
 st.title("📊 Sales Dashboard (Tandoori Masala, Nørrebro)")
@@ -142,7 +166,7 @@ st.caption(f"Data auto-refreshes at least every {config.REFRESH_SECONDS} seconds
 # Add today's entry — writes a new row directly to the Google Drive file
 # ---------------------------------------------------------------------------
 with st.expander("➕ Add a day's entry", expanded=False):
-    existing_people = sorted(df[config.COL_PERSON].dropna().unique().tolist()) if not df.empty else []
+    existing_people = get_all_known_people(df)
 
     person_choice = st.selectbox("Person", options=existing_people + ["Someone new..."], key="entry_person")
     new_person_name = ""
@@ -195,20 +219,8 @@ with st.expander("➕ Add a day's entry", expanded=False):
 # ---------------------------------------------------------------------------
 # Add staff working hours — writes to a separate "Working Hours" sheet
 # ---------------------------------------------------------------------------
-WH_COLS = ["Date", "Day", "Person", "Start Time", "End Time", "Hours Worked"]
-
-
-@st.cache_data(ttl=config.REFRESH_SECONDS, show_spinner=False)
-def load_working_hours() -> pd.DataFrame:
-    sheets = fetch_all_sheets()
-    wh = sheets.get(config.WORKING_HOURS_SHEET)
-    if wh is None or wh.empty:
-        return pd.DataFrame(columns=WH_COLS)
-    return wh
-
-
 with st.expander("🕐 Add staff working hours", expanded=False):
-    wh_existing_people = sorted(df[config.COL_PERSON].dropna().unique().tolist()) if not df.empty else []
+    wh_existing_people = get_all_known_people(df)
 
     wh_person_choice = st.selectbox("Person", options=wh_existing_people + ["Someone new..."], key="wh_person")
     wh_new_name = ""
@@ -294,10 +306,12 @@ if df.empty:
     st.stop()
 
 # ---- KPI row ----
-c1, c2, c3, c4, c5 = st.columns(5)
+c1, c2, c3 = st.columns(3)
 c1.metric("Total Revenue", f"{df[config.COL_TOTAL].sum():,.0f} {config.CURRENCY}")
 c2.metric("Total Tips", f"{df[config.COL_TIPS].sum():,.0f} {config.CURRENCY}")
 c3.metric("Total Cash Held", f"{df[config.COL_CASH].sum():,.0f} {config.CURRENCY}")
+
+c4, c5 = st.columns(2)
 c4.metric("Days Recorded", f"{df[config.COL_DATE].nunique()}")
 c5.metric("Avg Daily Revenue", f"{df[config.COL_TOTAL].mean():,.0f} {config.CURRENCY}")
 
