@@ -7,7 +7,7 @@ import streamlit as st
 
 # Must be the very first Streamlit command — before importing anything
 # (like config.py) that itself touches st.secrets or other Streamlit APIs.
-st.set_page_config(page_title="Sales Dashboard", layout="wide")
+st.set_page_config(page_title="Sales Dashboard (Tandoori Masala, Nørrebro)", layout="wide")
 
 import io
 import datetime
@@ -38,7 +38,7 @@ def check_password() -> bool:
     if st.session_state.get("authenticated"):
         return True
 
-    st.title("🔒 Sales Dashboard")
+    st.title("🔒 Sales Dashboard (Tandoori Masala, Nørrebro)")
     pwd = st.text_input("Password", type="password")
     if st.button("Enter"):
         if pwd == config.APP_PASSWORD:
@@ -106,7 +106,7 @@ def load_data() -> pd.DataFrame:
 
 df = load_data()
 
-st.title("📊 Sales Dashboard")
+st.title("📊 Sales Dashboard (Tandoori Masala, Nørrebro)")
 
 col_title, col_refresh = st.columns([5, 1])
 with col_refresh:
