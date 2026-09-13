@@ -1,4 +1,23 @@
-# Sales Dashboard — Cloud Version
+# Tandoori Masala Sales Dashboard
+
+I built this for my workplace, Tandoori Masala in Nørrebro, Copenhagen, to
+replace a pile of manual end-of-day spreadsheet math with something the
+whole team can check at a glance.
+
+Every day we take orders through our own till (Tillty), plus Wolt and
+UberEats. Someone closes out the register, counts tips and cash, and logs
+it all — this dashboard turns that daily log into live charts: revenue by
+channel, tips and cash by staff member, and a running record of who
+worked which hours. It updates automatically as soon as new data is
+entered, and anyone on the team can pull it up from their phone or laptop
+with a shared link and password — no spreadsheet software needed.
+
+It's a small project, but it's been a genuinely useful one: fewer manual
+totals, fewer "wait, how much cash did we actually have Tuesday?"
+conversations, and a much faster way to spot which channel is actually
+driving revenue.
+
+## Overview
 
 An always-on, password-protected dashboard with a permanent link, reading
 your Excel data from Google Drive. Updates automatically within about a
