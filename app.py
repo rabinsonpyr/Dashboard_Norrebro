@@ -1,4 +1,7 @@
-
+"""
+Cloud-hosted sales dashboard.
+Deploy this on Streamlit Community Cloud (share.streamlit.io) — see README.md.
+"""
 
 import streamlit as st
 
@@ -493,44 +496,80 @@ if wh_preview.empty:
 else:
     wh_preview = wh_preview.copy()
     wh_preview["Date"] = pd.to_datetime(wh_preview["Date"])
-    wh_dates = sorted(wh_preview["Date"].dt.date.unique(), reverse=True)
 
-    picked_date = st.selectbox("View shifts for date", options=wh_dates, key="wh_view_date")
-    day_rows = wh_preview[wh_preview["Date"].dt.date == picked_date]
+    tab_by_date, tab_by_person = st.tabs(["📅 By Date", "🧑 By Person"])
 
-    if day_rows.empty:
-        st.info("No working hours recorded for this date yet.")
-    else:
-        total_hours_that_day = day_rows["Hours Worked"].sum()
-        st.metric("Total Hours Worked", f"{total_hours_that_day:.1f} h")
+    with tab_by_date:
+        wh_dates = sorted(wh_preview["Date"].dt.date.unique(), reverse=True)
+        picked_date = st.selectbox("View shifts for date", options=wh_dates, key="wh_view_date")
+        day_rows = wh_preview[wh_preview["Date"].dt.date == picked_date]
 
-        gantt_rows = []
-        for _, r in day_rows.iterrows():
-            start_dt = datetime.datetime.combine(
-                picked_date, datetime.datetime.strptime(r["Start Time"], "%H:%M").time()
+        if day_rows.empty:
+            st.info("No working hours recorded for this date yet.")
+        else:
+            total_hours_that_day = day_rows["Hours Worked"].sum()
+            st.metric("Total Hours Worked", f"{total_hours_that_day:.1f} h")
+
+            gantt_rows = []
+            for _, r in day_rows.iterrows():
+                start_dt = datetime.datetime.combine(
+                    picked_date, datetime.datetime.strptime(r["Start Time"], "%H:%M").time()
+                )
+                end_dt = datetime.datetime.combine(
+                    picked_date, datetime.datetime.strptime(r["End Time"], "%H:%M").time()
+                )
+                if end_dt <= start_dt:  # shift crosses midnight
+                    end_dt += datetime.timedelta(days=1)
+                gantt_rows.append({
+                    "Person": r["Person"],
+                    "Start": start_dt,
+                    "End": end_dt,
+                    "Shift": f"{r['Start Time']} – {r['End Time']} ({r['Hours Worked']:.1f}h)",
+                })
+            gantt_df = pd.DataFrame(gantt_rows)
+
+            fig_gantt = px.timeline(
+                gantt_df, x_start="Start", x_end="End", y="Person", color="Person",
+                color_discrete_map=PERSON_COLORS, text="Shift",
             )
-            end_dt = datetime.datetime.combine(
-                picked_date, datetime.datetime.strptime(r["End Time"], "%H:%M").time()
-            )
-            if end_dt <= start_dt:  # shift crosses midnight
-                end_dt += datetime.timedelta(days=1)
-            gantt_rows.append({
-                "Person": r["Person"],
-                "Start": start_dt,
-                "End": end_dt,
-                "Shift": f"{r['Start Time']} – {r['End Time']} ({r['Hours Worked']:.1f}h)",
-            })
-        gantt_df = pd.DataFrame(gantt_rows)
+            fig_gantt.update_yaxes(autorange="reversed", title=None)
+            fig_gantt.update_xaxes(tickformat="%H:%M", title="Time")
+            fig_gantt.update_traces(textposition="inside", insidetextanchor="middle")
+            fig_gantt.update_layout(showlegend=False)
+            st.plotly_chart(fig_gantt, use_container_width=True)
 
-        fig_gantt = px.timeline(
-            gantt_df, x_start="Start", x_end="End", y="Person", color="Person",
-            color_discrete_map=PERSON_COLORS, text="Shift",
-        )
-        fig_gantt.update_yaxes(autorange="reversed", title=None)
-        fig_gantt.update_xaxes(tickformat="%H:%M", title="Time")
-        fig_gantt.update_traces(textposition="inside", insidetextanchor="middle")
-        fig_gantt.update_layout(showlegend=False)
-        st.plotly_chart(fig_gantt, use_container_width=True)
+    with tab_by_person:
+        wh_people = sorted(wh_preview["Person"].dropna().unique().tolist())
+        picked_person = st.selectbox("View hours for", options=wh_people, key="wh_view_person")
+        person_rows = wh_preview[wh_preview["Person"] == picked_person].copy()
+
+        if person_rows.empty:
+            st.info("No working hours recorded for this person yet.")
+        else:
+            person_rows = person_rows.sort_values("Date", ascending=False)
+            total_hours_person = person_rows["Hours Worked"].sum()
+            shifts_count = len(person_rows)
+
+            m1, m2 = st.columns(2)
+            m1.metric("Total Hours Worked", f"{total_hours_person:.1f} h")
+            m2.metric("Shifts Recorded", f"{shifts_count}")
+
+            fig_person = px.bar(
+                person_rows.sort_values("Date"), x="Date", y="Hours Worked",
+                color_discrete_sequence=[PERSON_COLORS.get(picked_person, "#636EFA")],
+                labels={"Date": "Date", "Hours Worked": "Hours"},
+            )
+            fig_person.update_xaxes(tickformat="%Y-%m-%d<br>(%a)", dtick="D1")
+            fig_person.update_traces(
+                hovertemplate="%{x}<br>%{y:.1f} h<extra></extra>",
+                text=person_rows.sort_values("Date")["Hours Worked"].map(lambda h: f"{h:.1f}h"),
+                textposition="outside",
+            )
+            st.plotly_chart(fig_person, use_container_width=True)
+
+            display_person_rows = person_rows[["Date", "Day", "Start Time", "End Time", "Hours Worked"]].copy()
+            display_person_rows["Date"] = display_person_rows["Date"].dt.strftime("%Y-%m-%d")
+            st.dataframe(display_person_rows, use_container_width=True, hide_index=True)
 
 st.subheader("Raw Data")
 display_cols = [config.COL_DATE, "Day", config.COL_PERSON, config.COL_SALES,
