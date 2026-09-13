@@ -1,7 +1,4 @@
-"""
-Cloud-hosted sales dashboard.
-Deploy this on Streamlit Community Cloud (share.streamlit.io) — see README.md.
-"""
+
 
 import streamlit as st
 
