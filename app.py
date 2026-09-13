@@ -306,14 +306,37 @@ if df.empty:
     st.stop()
 
 # ---- KPI row ----
-c1, c2, c3 = st.columns(3)
-c1.metric("Total Revenue", f"{df[config.COL_TOTAL].sum():,.0f} {config.CURRENCY}")
-c2.metric("Total Tips", f"{df[config.COL_TIPS].sum():,.0f} {config.CURRENCY}")
-c3.metric("Total Cash Held", f"{df[config.COL_CASH].sum():,.0f} {config.CURRENCY}")
+total_revenue = df[config.COL_TOTAL].sum()
+total_tips = df[config.COL_TIPS].sum()
+total_cash = df[config.COL_CASH].sum()
+days_recorded = df[config.COL_DATE].nunique()
+avg_daily_revenue = df[config.COL_TOTAL].mean()
 
-c4, c5 = st.columns(2)
-c4.metric("Days Recorded", f"{df[config.COL_DATE].nunique()}")
-c5.metric("Avg Daily Revenue", f"{df[config.COL_TOTAL].mean():,.0f} {config.CURRENCY}")
+kpi_cards = [
+    ("💰", "Total Revenue", f"{total_revenue:,.0f} {config.CURRENCY}", "#667eea", "#764ba2"),
+    ("💵", "Total Tips", f"{total_tips:,.0f} {config.CURRENCY}", "#f2994a", "#e67e22"),
+    ("🪙", "Total Cash Held", f"{total_cash:,.0f} {config.CURRENCY}", "#11998e", "#38ef7d"),
+    ("📅", "Days Recorded", f"{days_recorded}", "#396afc", "#2948ff"),
+    ("📈", "Avg Daily Revenue", f"{avg_daily_revenue:,.0f} {config.CURRENCY}", "#ee0979", "#ff6a00"),
+]
+
+cards_html = "".join(
+    f"""
+    <div style="flex:1; min-width:170px; background:linear-gradient(135deg,{c1},{c2});
+                color:white; border-radius:16px; padding:22px 12px; text-align:center;
+                box-shadow:0 4px 14px rgba(0,0,0,0.15);">
+        <div style="font-size:30px; line-height:1;">{icon}</div>
+        <div style="font-size:24px; font-weight:700; margin-top:8px; white-space:nowrap;">{value}</div>
+        <div style="font-size:13px; opacity:0.9; margin-top:6px;">{label}</div>
+    </div>
+    """
+    for icon, label, value, c1, c2 in kpi_cards
+)
+
+st.markdown(
+    f'<div style="display:flex; gap:14px; flex-wrap:wrap; justify-content:center; margin-bottom:8px;">{cards_html}</div>',
+    unsafe_allow_html=True,
+)
 
 st.divider()
 
