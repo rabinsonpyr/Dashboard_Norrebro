@@ -1,40 +1,44 @@
 # Tandoori Masala Sales Dashboard
 
+**🔗 Live dashboard: [dashboardnorrebro.streamlit.app](https://dashboardnorrebro.streamlit.app/)** (password-protected)
+
+## What this is
+
 I built this for my workplace, Tandoori Masala in Nørrebro, Copenhagen, to
-replace a pile of manual end-of-day spreadsheet math with something the
-whole team can check at a glance.
+replace manual end-of-day spreadsheet math with something the whole team
+can check at a glance.
 
-Every day we take orders through our own till (Tillty), plus Wolt and
-UberEats. Someone closes out the register, counts tips and cash, and logs
-it all — this dashboard turns that daily log into live charts: revenue by
-channel, tips and cash by staff member, and a running record of who
-worked which hours. It updates automatically as soon as new data is
-entered, and anyone on the team can pull it up from their phone or laptop
-with a shared link and password — no spreadsheet software needed.
+We take orders through our own till (Tillty), plus Wolt and UberEats.
+Every day, someone closes out the register, counts tips and cash, and
+logs it. This dashboard turns that daily log into live charts — revenue
+by channel, tips and cash by staff member, and a record of who worked
+which hours — and updates automatically as new data comes in. Anyone on
+the team can open the link above from their phone or laptop, no
+spreadsheet software required.
 
-It's a small project, but it's been a genuinely useful one: fewer manual
-totals, fewer "wait, how much cash did we actually have Tuesday?"
-conversations, and a much faster way to spot which channel is actually
-driving revenue.
+It's a small project, but a genuinely useful one: fewer manual totals,
+fewer "wait, how much cash did we actually have Tuesday?" conversations,
+and a much faster way to see which channel is actually driving revenue.
 
-## Overview
+## How I built it
 
-An always-on, password-protected dashboard with a permanent link, reading
-your Excel data from Google Drive. Updates automatically within about a
-minute of you saving changes — no restart needed, works even when your
-Mac is off.
+- **Streamlit** for the dashboard itself — Python, so I could reuse
+  pandas for the data cleaning and Plotly for the charts.
+- **Google Drive** holds the actual Excel file, accessed through a
+  Google service account, so the data source is the same spreadsheet
+  format the whole team already understands — no separate database.
+- **Streamlit Community Cloud** hosts the app itself, so it's always on
+  and reachable from a permanent link, independent of any one laptop.
+- Two in-app forms (daily sales entry, staff working hours) write
+  straight back to the Drive file, so the dashboard and the spreadsheet
+  never fall out of sync.
 
-## How it works
+## Setup reference (for running your own copy)
 
-- You keep editing the Excel file exactly as before — just save it inside
-  a synced Google Drive folder instead of (or in addition to) locally.
-- The app is hosted on Streamlit Community Cloud (free), so it's always
-  running, independent of your laptop.
-- The app re-fetches the file from Google Drive every ~60 seconds, so any
-  edit you save shows up shortly after, for everyone with the link.
-- A simple password screen gates the whole dashboard.
+The rest of this README is technical setup notes, mostly so future-me
+remembers how the pieces fit together.
 
-## 1. Set up Google Drive access (service account — supports writing, not just reading)
+### 1. Google Drive access (service account — supports writing, not just reading)
 
 1. Put your Excel file in a Google Drive folder (the Google Drive desktop
    app can sync it automatically like a normal folder on your Mac).
@@ -54,10 +58,8 @@ Mac is off.
    `xxxx@xxxx.iam.gserviceaccount.com`).
 8. Back in Google Drive, right-click your Excel file → **Share** → paste
    that email address → set its role to **Editor** → Send/Share.
-   (You can now turn off "Anyone with the link" if it was on before —
-   only the service account and people you explicitly add can access it.)
 
-## 2. Convert the JSON key into your secrets file
+### 2. Convert the JSON key into your secrets file
 
 Your downloaded JSON key has fields like `type`, `project_id`,
 `private_key`, `client_email`, etc. These map directly into a
@@ -66,38 +68,22 @@ Your downloaded JSON key has fields like `type`, `project_id`,
 The trickiest part is `private_key`: keep its `\n` line breaks by wrapping
 the whole value in triple quotes (`"""`) as shown in the example.
 
-## 2. Put this code on GitHub
+### 3. Put this code on GitHub
 
-1. Create a free GitHub account if you don't have one: https://github.com
-2. Create a new repository (e.g. `sales-dashboard`), and upload these
-   files to it: `app.py`, `config.py`, `requirements.txt`, `.gitignore`.
-   (Do **not** upload `.streamlit/secrets.toml` if you create one — the
-   `.gitignore` already excludes it.)
+Create a repository and upload `app.py`, `config.py`, `drive_utils.py`,
+`requirements.txt`, and `.gitignore`. Never upload a real
+`.streamlit/secrets.toml` — the `.gitignore` already excludes it.
 
-## 3. Deploy on Streamlit Community Cloud
+### 4. Deploy on Streamlit Community Cloud
 
-1. Go to https://share.streamlit.io and sign in with your GitHub account.
-2. Click **"New app"**, pick your repository, and set the main file to
-   `app.py`.
-3. Before clicking Deploy, open **"Advanced settings" → Secrets** and paste
-   your `APP_PASSWORD`, `GOOGLE_DRIVE_FILE_ID`, and the entire
-   `[gcp_service_account]` block from your local `secrets.toml` (see step 2
-   above).
-4. Click **Deploy**. After a minute or two you'll get a permanent link like:
-   ```
-   https://your-app-name.streamlit.app
-   ```
+1. Go to https://share.streamlit.io and sign in with GitHub.
+2. "New app" → pick the repository → main file `app.py`.
+3. Under "Advanced settings" → Secrets, paste `APP_PASSWORD`,
+   `GOOGLE_DRIVE_FILE_ID`, and the full `[gcp_service_account]` block.
+4. Deploy. You'll get a permanent link — that's what you share with
+   other people; they'll be asked for the password first.
 
-That link is what you share with other people. They'll be asked for the
-password you set above before seeing anything.
-
-## 4. Updating the password or file later
-
-Go to your app on https://share.streamlit.io → **⋮ menu** → **Settings**
-→ **Secrets**, edit the values, and save — the app restarts automatically
-with the new settings.
-
-## 5. Testing locally before deploying (optional)
+### 5. Testing locally before deploying (optional)
 
 ```bash
 pip install -r requirements.txt
@@ -106,15 +92,10 @@ cp .streamlit/secrets.toml.example .streamlit/secrets.toml
 streamlit run app.py
 ```
 
-## Notes
+### Notes
 
-- Your old local automation (`launchd`, `run_dashboard.sh`) is no longer
-  needed for this cloud version — the app refreshes itself. You can keep
-  using the old local version too if you still want a version that opens
-  automatically on your own Mac at a fixed time.
-- If the dashboard shows stale data, click the **🔄 Refresh now** button
-  at the top — it force-clears the cache instead of waiting for the
-  60-second auto-refresh.
-- If you rename or re-upload the Excel file on Drive, the File ID usually
-  stays the same as long as it's the same Drive file (not a new upload) —
-  but double-check by re-copying the share link if the dashboard errors.
+- If the dashboard shows stale data, click **🔄 Refresh now** — it
+  force-clears the cache instead of waiting for the ~60-second
+  auto-refresh.
+- If you rename or re-upload the Excel file on Drive, double-check the
+  File ID hasn't changed (re-copy the share link if the dashboard errors).
