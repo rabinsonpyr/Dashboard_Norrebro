@@ -144,13 +144,13 @@ st.caption(f"Data auto-refreshes at least every {config.REFRESH_SECONDS} seconds
 with st.expander("➕ Add a day's entry", expanded=False):
     existing_people = sorted(df[config.COL_PERSON].dropna().unique().tolist()) if not df.empty else []
 
+    person_choice = st.selectbox("Person", options=existing_people + ["Someone new..."], key="entry_person")
+    new_person_name = ""
+    if person_choice == "Someone new...":
+        new_person_name = st.text_input("Enter name", key="entry_new_person_name")
+
     with st.form("add_entry_form", clear_on_submit=True):
         entry_date = st.date_input("Date", value=datetime.date.today())
-
-        person_choice = st.selectbox("Person", options=existing_people + ["Someone new..."])
-        new_person_name = ""
-        if person_choice == "Someone new...":
-            new_person_name = st.text_input("Enter name")
 
         c1, c2, c3 = st.columns(3)
         tillty_val = c1.number_input(f"{config.COL_SALES} ({config.CURRENCY})", min_value=0.0, step=1.0)
@@ -210,13 +210,13 @@ def load_working_hours() -> pd.DataFrame:
 with st.expander("🕐 Add staff working hours", expanded=False):
     wh_existing_people = sorted(df[config.COL_PERSON].dropna().unique().tolist()) if not df.empty else []
 
+    wh_person_choice = st.selectbox("Person", options=wh_existing_people + ["Someone new..."], key="wh_person")
+    wh_new_name = ""
+    if wh_person_choice == "Someone new...":
+        wh_new_name = st.text_input("Enter name", key="wh_new_name")
+
     with st.form("add_hours_form", clear_on_submit=True):
         wh_date = st.date_input("Date", value=datetime.date.today(), key="wh_date")
-
-        wh_person_choice = st.selectbox("Person", options=wh_existing_people + ["Someone new..."], key="wh_person")
-        wh_new_name = ""
-        if wh_person_choice == "Someone new...":
-            wh_new_name = st.text_input("Enter name", key="wh_new_name")
 
         c1, c2 = st.columns(2)
         start_time = c1.time_input("Start time", key="wh_start")
@@ -255,51 +255,6 @@ with st.expander("🕐 Add staff working hours", expanded=False):
                 st.cache_data.clear()
                 st.success(f"Saved {hours_worked:.1f}h for {final_wh_person} on {wh_date}.")
                 st.rerun()
-
-    wh_preview = load_working_hours()
-    if not wh_preview.empty:
-        wh_preview = wh_preview.copy()
-        wh_preview["Date"] = pd.to_datetime(wh_preview["Date"])
-        wh_dates = sorted(wh_preview["Date"].dt.date.unique(), reverse=True)
-
-        picked_date = st.selectbox(
-            "View shifts for date", options=wh_dates, key="wh_view_date"
-        )
-        day_rows = wh_preview[wh_preview["Date"].dt.date == picked_date]
-
-        if day_rows.empty:
-            st.info("No working hours recorded for this date yet.")
-        else:
-            total_hours_that_day = day_rows["Hours Worked"].sum()
-            st.metric("Total Hours Worked", f"{total_hours_that_day:.1f} h")
-
-            gantt_rows = []
-            for _, r in day_rows.iterrows():
-                start_dt = datetime.datetime.combine(
-                    picked_date, datetime.datetime.strptime(r["Start Time"], "%H:%M").time()
-                )
-                end_dt = datetime.datetime.combine(
-                    picked_date, datetime.datetime.strptime(r["End Time"], "%H:%M").time()
-                )
-                if end_dt <= start_dt:  # shift crosses midnight
-                    end_dt += datetime.timedelta(days=1)
-                gantt_rows.append({
-                    "Person": r["Person"],
-                    "Start": start_dt,
-                    "End": end_dt,
-                    "Shift": f"{r['Start Time']} – {r['End Time']} ({r['Hours Worked']:.1f}h)",
-                })
-            gantt_df = pd.DataFrame(gantt_rows)
-
-            fig_gantt = px.timeline(
-                gantt_df, x_start="Start", x_end="End", y="Person", color="Person",
-                color_discrete_map=PERSON_COLORS, text="Shift",
-            )
-            fig_gantt.update_yaxes(autorange="reversed", title=None)
-            fig_gantt.update_xaxes(tickformat="%H:%M", title="Time")
-            fig_gantt.update_traces(textposition="inside", insidetextanchor="middle")
-            fig_gantt.update_layout(showlegend=False)
-            st.plotly_chart(fig_gantt, use_container_width=True)
 
 with st.expander("🔍 Debug info (click if the dashboard looks empty)"):
     st.write(f"Rows loaded: **{len(df)}**")
@@ -498,6 +453,52 @@ else:
     ))
     fig4.update_layout(hovermode="x unified")
     st.plotly_chart(fig4, use_container_width=True)
+
+st.subheader("Staff Working Hours")
+wh_preview = load_working_hours()
+if wh_preview.empty:
+    st.info("No working hours recorded yet. Add some using the form above.")
+else:
+    wh_preview = wh_preview.copy()
+    wh_preview["Date"] = pd.to_datetime(wh_preview["Date"])
+    wh_dates = sorted(wh_preview["Date"].dt.date.unique(), reverse=True)
+
+    picked_date = st.selectbox("View shifts for date", options=wh_dates, key="wh_view_date")
+    day_rows = wh_preview[wh_preview["Date"].dt.date == picked_date]
+
+    if day_rows.empty:
+        st.info("No working hours recorded for this date yet.")
+    else:
+        total_hours_that_day = day_rows["Hours Worked"].sum()
+        st.metric("Total Hours Worked", f"{total_hours_that_day:.1f} h")
+
+        gantt_rows = []
+        for _, r in day_rows.iterrows():
+            start_dt = datetime.datetime.combine(
+                picked_date, datetime.datetime.strptime(r["Start Time"], "%H:%M").time()
+            )
+            end_dt = datetime.datetime.combine(
+                picked_date, datetime.datetime.strptime(r["End Time"], "%H:%M").time()
+            )
+            if end_dt <= start_dt:  # shift crosses midnight
+                end_dt += datetime.timedelta(days=1)
+            gantt_rows.append({
+                "Person": r["Person"],
+                "Start": start_dt,
+                "End": end_dt,
+                "Shift": f"{r['Start Time']} – {r['End Time']} ({r['Hours Worked']:.1f}h)",
+            })
+        gantt_df = pd.DataFrame(gantt_rows)
+
+        fig_gantt = px.timeline(
+            gantt_df, x_start="Start", x_end="End", y="Person", color="Person",
+            color_discrete_map=PERSON_COLORS, text="Shift",
+        )
+        fig_gantt.update_yaxes(autorange="reversed", title=None)
+        fig_gantt.update_xaxes(tickformat="%H:%M", title="Time")
+        fig_gantt.update_traces(textposition="inside", insidetextanchor="middle")
+        fig_gantt.update_layout(showlegend=False)
+        st.plotly_chart(fig_gantt, use_container_width=True)
 
 st.subheader("Raw Data")
 display_cols = [config.COL_DATE, "Day", config.COL_PERSON, config.COL_SALES,
