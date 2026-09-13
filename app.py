@@ -321,15 +321,13 @@ kpi_cards = [
 ]
 
 cards_html = "".join(
-    f"""
-    <div style="flex:1; min-width:170px; background:linear-gradient(135deg,{c1},{c2});
-                color:white; border-radius:16px; padding:22px 12px; text-align:center;
-                box-shadow:0 4px 14px rgba(0,0,0,0.15);">
-        <div style="font-size:30px; line-height:1;">{icon}</div>
-        <div style="font-size:24px; font-weight:700; margin-top:8px; white-space:nowrap;">{value}</div>
-        <div style="font-size:13px; opacity:0.9; margin-top:6px;">{label}</div>
-    </div>
-    """
+    f'<div style="flex:1; min-width:170px; background:linear-gradient(135deg,{c1},{c2}); '
+    f'color:white; border-radius:16px; padding:22px 12px; text-align:center; '
+    f'box-shadow:0 4px 14px rgba(0,0,0,0.15);">'
+    f'<div style="font-size:30px; line-height:1;">{icon}</div>'
+    f'<div style="font-size:24px; font-weight:700; margin-top:8px; white-space:nowrap;">{value}</div>'
+    f'<div style="font-size:13px; opacity:0.9; margin-top:6px;">{label}</div>'
+    f'</div>'
     for icon, label, value, c1, c2 in kpi_cards
 )
 
