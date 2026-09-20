@@ -567,10 +567,6 @@ else:
             )
             st.plotly_chart(fig_person, use_container_width=True)
 
-            display_person_rows = person_rows[["Date", "Day", "Start Time", "End Time", "Hours Worked"]].copy()
-            display_person_rows["Date"] = display_person_rows["Date"].dt.strftime("%Y-%m-%d")
-            st.dataframe(display_person_rows, use_container_width=True, hide_index=True)
-
 st.subheader("Raw Data")
 display_cols = [config.COL_DATE, "Day", config.COL_PERSON, config.COL_SALES,
                  config.COL_WOLT, config.COL_UBEREATS, config.COL_TOTAL,
