@@ -1,15 +1,10 @@
 
 
 import streamlit as st
-
-# Must be the very first Streamlit command — before importing anything
-# (like config.py) that itself touches st.secrets or other Streamlit APIs.
 st.set_page_config(page_title="Sales Dashboard (Tandoori Masala, Nørrebro)", layout="wide")
-
 import io
 import datetime
 import logging
-
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
