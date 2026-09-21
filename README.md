@@ -4,7 +4,7 @@
 
 ## What this is
 
-I built this for my workplace, Tandoori Masala in Nørrebro, Copenhagen, to
+I built this for my workplace in Nørrebro, Copenhagen, to
 replace manual end-of-day spreadsheet math with something the whole team
 can check at a glance.
 
