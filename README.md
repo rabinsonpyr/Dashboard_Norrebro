@@ -1,4 +1,4 @@
-# Tandoori Masala Sales Dashboard
+# Sales Dashboard
 
 **🔗 Live dashboard: [dashboardnorrebro.streamlit.app](https://dashboardnorrebro.streamlit.app/)** (password-protected)
 
