@@ -1,7 +1,4 @@
-"""
-Cloud-hosted sales dashboard.
-Deploy this on Streamlit Community Cloud (share.streamlit.io) — see README.md.
-"""
+
 
 import streamlit as st
 
@@ -19,9 +16,7 @@ import plotly.graph_objects as go
 
 import config
 
-# Named colors for specific people (chosen for clear contrast against each
-# other); anyone else falls back to Plotly's default palette. Used across
-# multiple charts (tips, cash, working-hours timeline).
+
 PERSON_COLORS = {"Rabinson": "#FF6B35", "Sapana": "#0074D9"}
 import drive_utils
 
@@ -29,9 +24,6 @@ logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("dashboard")
 
 
-# ---------------------------------------------------------------------------
-# Password gate
-# ---------------------------------------------------------------------------
 def check_password() -> bool:
     if not config.APP_PASSWORD:
         st.error(
@@ -57,10 +49,8 @@ def check_password() -> bool:
 if not check_password():
     st.stop()
 
-
-# ---------------------------------------------------------------------------
 # Data loading — fetch the Excel file from Google Drive (via service account)
-# ---------------------------------------------------------------------------
+
 def fetch_all_sheets() -> dict:
     """Downloads the current workbook from Drive as a dict of {sheet_name: DataFrame}."""
     if not config.GOOGLE_DRIVE_FILE_ID:
@@ -162,9 +152,7 @@ with col_refresh:
 
 st.caption(f"Data auto-refreshes at least every {config.REFRESH_SECONDS} seconds.")
 
-# ---------------------------------------------------------------------------
 # Add today's entry — writes a new row directly to the Google Drive file
-# ---------------------------------------------------------------------------
 with st.expander("➕ Add a day's entry", expanded=False):
     existing_people = get_all_known_people(df)
 
@@ -216,9 +204,7 @@ with st.expander("➕ Add a day's entry", expanded=False):
                 st.success(f"Saved entry for {final_person} on {entry_date}.")
                 st.rerun()
 
-# ---------------------------------------------------------------------------
 # Add staff working hours — writes to a separate "Working Hours" sheet
-# ---------------------------------------------------------------------------
 with st.expander("🕐 Add staff working hours", expanded=False):
     wh_existing_people = get_all_known_people(df)
 
@@ -305,7 +291,7 @@ if df.empty:
     )
     st.stop()
 
-# ---- KPI row ----
+# KPI row 
 total_revenue = df[config.COL_TOTAL].sum()
 total_tips = df[config.COL_TIPS].sum()
 total_cash = df[config.COL_CASH].sum()
@@ -338,7 +324,7 @@ st.markdown(
 
 st.divider()
 
-# ---- Revenue trend over time ----
+# Revenue trend over time
 st.subheader("Revenue Over Time")
 
 CHANNEL_COLORS = {
